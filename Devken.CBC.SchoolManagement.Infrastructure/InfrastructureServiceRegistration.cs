@@ -234,6 +234,9 @@ namespace Devken.CBC.SchoolManagement.Infrastructure
                 RegisterPermissionPolicy(options, PermissionKeys.FeeStructureWrite);
                 RegisterPermissionPolicy(options, PermissionKeys.FeeStructureDelete);
 
+                RegisterPermissionPolicy(options, PermissionKeys.InvoiceItemRead);   // ← ADD
+                RegisterPermissionPolicy(options, PermissionKeys.InvoiceItemWrite);
+
                 // ── Curriculum permissions ───────────────────────────────────
                 RegisterPermissionPolicy(options, PermissionKeys.CurriculumRead);
                 RegisterPermissionPolicy(options, PermissionKeys.CurriculumWrite);
