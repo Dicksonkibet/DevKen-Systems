@@ -7,28 +7,32 @@ import {
     UntypedFormGroup,
     Validators,
 } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule }          from '@angular/material/button';
+import { MatCheckboxModule }         from '@angular/material/checkbox';
+import { MatFormFieldModule }        from '@angular/material/form-field';
+import { MatIconModule }             from '@angular/material/icon';
+import { MatInputModule }            from '@angular/material/input';
+import { MatProgressSpinnerModule }  from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { NgIf, NgStyle } from '@angular/common';
-import { fuseAnimations } from '@fuse/animations';
+import { NgStyle }                   from '@angular/common';
+import { fuseAnimations }            from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
-import { AuthService } from 'app/core/auth/auth.service';
+import { AuthService }               from 'app/core/auth/auth.service';
+
+// ─── Interfaces ───────────────────────────────────────────────────────────────
 
 export interface RolePreset {
-    label: string;
-    email: string;
+    label   : string;
+    email   : string;
     password: string;
 }
 
 export interface Avatar {
     initials: string;
-    bg: string;
+    bg      : string;
 }
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 @Component({
     selector     : 'auth-sign-in',
@@ -70,13 +74,13 @@ export class AuthSignInComponent implements OnInit
     activeRole = 'Super Admin';
 
     roles: RolePreset[] = [
-        { label: 'Super Admin', email: 'superadmin@devken.com', password: 'SuperAdmin@123'  },
-        { label: 'Principal',   email: 'principal@school.com', password: 'Principal@123'   },
-        { label: 'Teacher',     email: 'teacher@school.com',   password: 'Teacher@123'     },
-        { label: 'Parent',      email: 'parent@school.com',    password: 'Parent@123'      },
+        { label: 'Super Admin', email: 'superadmin@devken.com', password: 'SuperAdmin@123' },
+        { label: 'Principal',   email: 'principal@school.com',  password: 'Principal@123'  },
+        { label: 'Teacher',     email: 'teacher@school.com',    password: 'Teacher@123'    },
+        { label: 'Parent',      email: 'parent@school.com',     password: 'Parent@123'     },
     ];
 
-    // ── Right panel ────────────────────────────────────────────────────────────
+    // ── Right panel data ───────────────────────────────────────────────────────
     features: string[] = [
         'Competency-based assessment tracking (EE · ME · AE · BE)',
         'Full CBC grade support: PP1, PP2, Grade 1–6, JHS 1–3',
@@ -107,14 +111,16 @@ export class AuthSignInComponent implements OnInit
     {
         this.signInForm = this._formBuilder.group({
             email     : ['superadmin@devken.com', [Validators.required, Validators.email]],
-            password  : ['SuperAdmin@123',         Validators.required],
-            rememberMe: [''],
+            password  : ['SuperAdmin@123',          Validators.required],
+            rememberMe: [false],
         });
     }
 
     // ── Public methods ─────────────────────────────────────────────────────────
 
-    /** Pre-fill credentials for the selected role */
+    /**
+     * Pre-fill credentials when a role tab is clicked.
+     */
     setRole(role: RolePreset): void
     {
         this.activeRole = role.label;
@@ -122,16 +128,19 @@ export class AuthSignInComponent implements OnInit
         this.showAlert = false;
     }
 
-    /** Submit sign-in */
+    /**
+     * Submit the sign-in form.
+     * Calls superAdminSignIn for super-admin emails, signIn for everyone else.
+     */
     signIn(): void
     {
         if (this.signInForm.invalid) { return; }
 
         this.signInForm.disable();
-        this.showAlert  = false;
-        this.showIcon   = false;
+        this.showAlert = false;
+        this.showIcon  = false;
 
-        const email        = this.signInForm.get('email').value as string;
+        const email        = this.signInForm.get('email')!.value as string;
         const isSuperAdmin = email.toLowerCase().includes('superadmin');
 
         const authCall = isSuperAdmin
@@ -141,6 +150,7 @@ export class AuthSignInComponent implements OnInit
         authCall.subscribe({
             next: (response) =>
             {
+                // Redirect to password-change flow if required
                 if (response.data.user.requirePasswordChange)
                 {
                     this._router.navigate(['/change-password']);
@@ -168,7 +178,10 @@ export class AuthSignInComponent implements OnInit
         });
     }
 
-    /** Cancel — force password change flow logout */
+    /**
+     * Cancel during a forced password-change flow.
+     * Signs the user out and returns them to the sign-in page.
+     */
     logout(): void
     {
         const confirmed = confirm(
