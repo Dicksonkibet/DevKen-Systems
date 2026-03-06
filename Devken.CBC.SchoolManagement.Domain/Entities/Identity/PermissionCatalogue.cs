@@ -69,6 +69,8 @@ namespace Devken.CBC.SchoolManagement.Domain.Entities.Identity
             (PermissionKeys.PaymentWrite, "Record Payments",    "Finance", "Log new payments"),
             (PermissionKeys.InvoiceRead,  "View Invoices",      "Finance", "Access invoice records"),
             (PermissionKeys.InvoiceWrite, "Generate Invoices",  "Finance", "Create new invoices"),
+             (PermissionKeys.InvoiceItemRead,  "View Invoice items",      "Finance", "Access invoice items records"),
+            (PermissionKeys.InvoiceItemWrite, "Generate Invoice items",  "Finance", "Create new invoice items"),
 
             // ── Finance — Fee Structure ──────────────────────────────────────
             (PermissionKeys.FeeStructureRead,   "View Fee Structures",   "Finance - Fee Structure",

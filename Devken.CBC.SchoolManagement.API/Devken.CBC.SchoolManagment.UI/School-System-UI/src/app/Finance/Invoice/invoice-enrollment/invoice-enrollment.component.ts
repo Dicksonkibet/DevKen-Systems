@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 import { AlertService } from 'app/core/DevKenService/Alert/AlertService';
-import { InvoiceService } from 'app/core/DevKenService/Invoice/Invoice.service ';
+import { InvoiceService } from 'app/core/DevKenService/Finance/Invoice/Invoice.service ';
 import { InvoiceDetailsComponent, InvoiceLookupItem } from '../invoice-details/invoice-details.component';
 import { InvoiceItemsComponent } from '../invoice-items/invoice-items.component';
 import { InvoiceNotesComponent } from '../invoice-notes/invoice-notes.component';

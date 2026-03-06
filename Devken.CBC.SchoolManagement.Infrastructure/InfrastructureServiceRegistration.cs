@@ -227,7 +227,9 @@ namespace Devken.CBC.SchoolManagement.Infrastructure
                 RegisterPermissionPolicy(options, PermissionKeys.PaymentWrite);
                 RegisterPermissionPolicy(options, PermissionKeys.InvoiceRead);
                 RegisterPermissionPolicy(options, PermissionKeys.InvoiceWrite);
-             //   RegisterPermissionPolicy(options, PermissionKeys.InvoiceDelete);  // ← NEW
+                RegisterPermissionPolicy(options, PermissionKeys.InvoiceItemRead);
+                RegisterPermissionPolicy(options, PermissionKeys.InvoiceItemWrite);
+                //   RegisterPermissionPolicy(options, PermissionKeys.InvoiceDelete);  // ← NEW
 
                 // ── Finance — Fee Structure permissions ──────────────────────
                 RegisterPermissionPolicy(options, PermissionKeys.FeeStructureRead);
@@ -327,6 +329,7 @@ namespace Devken.CBC.SchoolManagement.Infrastructure
             services.AddScoped<IFeeItemRepository, FeeItemRepository>();
             services.AddScoped<IFeeStructureRepository, FeeStructureRepository>();
             services.AddScoped<IInvoiceRepository, InvoiceRepository>();      // ← NEW
+            services.AddScoped<IInvoiceItemRepository, InvoiceItemRepository>();  // ← NEW
 
             // Assessment Repositories
             services.AddScoped<IFormativeAssessmentRepository, FormativeAssessmentRepository>();
@@ -352,6 +355,7 @@ namespace Devken.CBC.SchoolManagement.Infrastructure
             services.AddScoped<IFeeItemService, FeeItemService>();
             //services.AddScoped<IFeeStructureService, FeeStructureService>();  // ← NEW
             services.AddScoped<IInvoiceService, InvoiceService>();            // ← NEW
+            services.AddScoped<IInvoiceItemService, InvoiceItemService>();    // ← NEW
             services.AddScoped<IJwtService, JwtService>();
             services.AddScoped<IPermissionSeedService, PermissionSeedService>();
             services.AddScoped<ISubscriptionSeedService, SubscriptionSeedService>();
