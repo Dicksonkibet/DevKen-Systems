@@ -27,10 +27,10 @@ export const appRoutes: Route[] = [
         data: { layout: 'empty' },
         children: [
             { path: 'confirmation-required', loadChildren: () => import('./modules/auth/confirmation-required/confirmation-required.routes') },
-            { path: 'forgot-password', loadChildren: () => import('./modules/auth/forgot-password/forgot-password.routes') },
-            { path: 'reset-password', loadChildren: () => import('./modules/auth/reset-password/reset-password.routes') },
-            { path: 'sign-in', loadChildren: () => import('./modules/auth/sign-in/sign-in.routes') },
-            { path: 'sign-up', loadChildren: () => import('./modules/auth/sign-up/sign-up.routes') },
+            { path: 'forgot-password',       loadChildren: () => import('./modules/auth/forgot-password/forgot-password.routes') },
+            { path: 'reset-password',        loadChildren: () => import('./modules/auth/reset-password/reset-password.routes') },
+            { path: 'sign-in',               loadChildren: () => import('./modules/auth/sign-in/sign-in.routes') },
+            { path: 'sign-up',               loadChildren: () => import('./modules/auth/sign-up/sign-up.routes') },
         ]
     },
 
@@ -57,7 +57,7 @@ export const appRoutes: Route[] = [
         component: LayoutComponent,
         data: { layout: 'empty' },
         children: [
-            { path: 'sign-out', loadChildren: () => import('./modules/auth/sign-out/sign-out.routes') },
+            { path: 'sign-out',       loadChildren: () => import('./modules/auth/sign-out/sign-out.routes') },
             { path: 'unlock-session', loadChildren: () => import('./modules/auth/unlock-session/unlock-session.routes') }
         ]
     },
