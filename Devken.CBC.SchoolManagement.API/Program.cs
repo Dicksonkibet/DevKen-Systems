@@ -168,21 +168,21 @@ builder.Services
     .AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme    = JwtBearerDefaults.AuthenticationScheme;
     })
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSection["Issuer"],
-            ValidAudience = jwtSection["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
+            ValidIssuer              = jwtSection["Issuer"],
+            ValidAudience            = jwtSection["Audience"],
+            IssuerSigningKey         = new SymmetricSecurityKey(
                                            Encoding.UTF8.GetBytes(secretKey)),
-            ClockSkew = TimeSpan.FromMinutes(1),
+            ClockSkew                = TimeSpan.FromMinutes(1),
         };
 
         // Allow the JWT to be read from the refreshToken cookie as a fallback
@@ -206,7 +206,7 @@ builder.Services
 // Culture Configuration
 // ══════════════════════════════════════════════════════════════
 var supportedCultures = new[] { new CultureInfo("en-US") };
-CultureInfo.DefaultThreadCurrentCulture = supportedCultures[0];
+CultureInfo.DefaultThreadCurrentCulture   = supportedCultures[0];
 CultureInfo.DefaultThreadCurrentUICulture = supportedCultures[0];
 
 // ══════════════════════════════════════════════════════════════
@@ -220,7 +220,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var logger = app.Logger;
+    var logger    = app.Logger;
 
     try
     {
@@ -314,15 +314,15 @@ app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
-    RequestPath = "/uploads"
+    RequestPath  = "/uploads"
 });
 
 // 3. Localisation
 app.UseRequestLocalization(new RequestLocalizationOptions
 {
     DefaultRequestCulture = new RequestCulture("en-US"),
-    SupportedCultures = new List<CultureInfo> { new("en-US") },
-    SupportedUICultures = new List<CultureInfo> { new("en-US") }
+    SupportedCultures     = new List<CultureInfo> { new("en-US") },
+    SupportedUICultures   = new List<CultureInfo> { new("en-US") }
 });
 
 // 4. Swagger — registered BEFORE auth middleware so the UI is always reachable
@@ -332,8 +332,8 @@ app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "DevKen School Management API v1");
-    c.RoutePrefix = app.Environment.IsDevelopment() ? string.Empty : "swagger";
-    c.DocumentTitle = "DevKen School Management API";
+    c.RoutePrefix    = app.Environment.IsDevelopment() ? string.Empty : "swagger";
+    c.DocumentTitle  = "DevKen School Management API";
     c.DisplayRequestDuration();
     c.EnablePersistAuthorization();
 });
