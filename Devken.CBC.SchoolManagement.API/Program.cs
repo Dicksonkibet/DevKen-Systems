@@ -1,4 +1,4 @@
-﻿using Devken.CBC.SchoolManagement.API.Diagnostics;
+using Devken.CBC.SchoolManagement.API.Diagnostics;
 using Devken.CBC.SchoolManagement.API.Registration;
 using Devken.CBC.SchoolManagement.API.Services;
 using Devken.CBC.SchoolManagement.Application.Service;
@@ -29,11 +29,8 @@ if (!Directory.Exists(uploadsPath))
 QuestPDF.Settings.License = LicenseType.Community;
 
 // ══════════════════════════════════════════════════════════════
-// CORS Configuration
+// CORS Configuration (Fixed)
 // ══════════════════════════════════════════════════════════════
-// FIX: AllowAnyOrigin() cannot be used with AllowCredentials().
-// If your frontend sends cookies or Authorization headers, you must
-// specify exact origins. Add more origins to the array as needed.
 var angularCorsPolicy = "AngularCors";
 
 var allowedOrigins = builder.Configuration
@@ -42,7 +39,7 @@ var allowedOrigins = builder.Configuration
     ?? new[]
     {
         "https://dev-ken-systems.vercel.app",
-        "http://localhost:4200",
+        "http://localhost:4200"
     };
 
 builder.Services.AddCors(options =>
@@ -50,11 +47,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy(angularCorsPolicy, policy =>
     {
         policy
-            .WithOrigins(allowedOrigins)   // explicit origins only
+            .WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials()            // required for cookie-based refresh tokens
-            .SetPreflightMaxAge(TimeSpan.FromMinutes(10)); // cache preflight responses
+            .AllowCredentials()
+            .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
     });
 });
 
@@ -145,6 +142,27 @@ builder.Services.AddSchoolManagement(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // ══════════════════════════════════════════════════════════════
+// Google OAuth Authentication
+// ══════════════════════════════════════════════════════════════
+var googleSsoConfig = builder.Configuration.GetSection("Sso:Google");
+var googleClientId = googleSsoConfig["ClientId"];
+var googleClientSecret = googleSsoConfig["ClientSecret"];
+var googleRedirectUri = googleSsoConfig["RedirectUri"];
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "Cookies";
+    options.DefaultChallengeScheme = "Google";
+})
+.AddCookie("Cookies")
+.AddGoogle("Google", options =>
+{
+    options.ClientId = googleClientId;
+    options.ClientSecret = googleClientSecret;
+    options.CallbackPath = "/api/auth/sso/google"; // backend handles callback
+});
+
+// ══════════════════════════════════════════════════════════════
 // Culture Configuration
 // ══════════════════════════════════════════════════════════════
 var supportedCultures = new[] { new CultureInfo("en-US") };
@@ -168,7 +186,6 @@ using (var scope = app.Services.CreateScope())
     {
         logger.LogInformation("Starting database initialization...");
 
-        // ── Step 1: Apply Migrations or Create Schema ──────────────
         try
         {
             var pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
@@ -198,10 +215,8 @@ using (var scope = app.Services.CreateScope())
             logger.LogInformation("Database schema created via EnsureCreated fallback.");
         }
 
-        // ── Step 2: Seed Core Data ─────────────────────────────────
         await dbContext.SeedDatabaseAsync(logger);
 
-        // ── Step 3: Seed Subscription Plans ───────────────────────
         try
         {
             var planService = scope.ServiceProvider.GetRequiredService<ISubscriptionPlanService>();
@@ -212,7 +227,6 @@ using (var scope = app.Services.CreateScope())
             logger.LogError(ex, "An error occurred while seeding subscription plans.");
         }
 
-        // ── Step 4: Seed Permissions for Default School ────────────
         try
         {
             var defaultSchool = await dbContext.Schools
@@ -246,18 +260,7 @@ using (var scope = app.Services.CreateScope())
 // ══════════════════════════════════════════════════════════════
 // Middleware Pipeline
 // ══════════════════════════════════════════════════════════════
-// IMPORTANT: Order matters. CORS must come first — before any
-// middleware that can produce a response (auth, pipeline, etc.).
-// If auth middleware runs first, a 401 is returned without CORS
-// headers, causing the browser to report a "CORS error" instead
-// of the actual 401.
-// ──────────────────────────────────────────────────────────────
-
-// 1. CORS — must be first so ALL responses include CORS headers,
-//    including 401/403 errors returned by downstream middleware.
 app.UseCors(angularCorsPolicy);
-
-// 2. Static files (single registration — FIX: was registered 3×)
 app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -265,7 +268,6 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads"
 });
 
-// 3. Request localization
 app.UseRequestLocalization(new RequestLocalizationOptions
 {
     DefaultRequestCulture = new RequestCulture("en-US"),
@@ -273,33 +275,25 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedUICultures = new List<CultureInfo> { new CultureInfo("en-US") }
 });
 
-// 4. Swagger (available in all environments for deployed API testing)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "DevKen School Management API v1");
-    // Dev: serve at root (/), Production: serve at /swagger
     c.RoutePrefix = app.Environment.IsDevelopment() ? string.Empty : "swagger";
     c.DocumentTitle = "DevKen School Management API";
     c.DisplayRequestDuration();
 });
 
-// 5. Custom API pipeline (exception handling, logging, etc.)
-//    NOTE: If UseApiPipeline() internally calls UseAuthentication() or
-//    UseAuthorization(), remove those calls below to avoid double registration.
 app.UseApiPipeline();
 
-// 6. Authentication & Authorization
 app.UseAuthentication();
 app.UseMiddleware<TenantMiddleware>();
 app.UseAuthorization();
 
-// 7. Controllers
 app.MapControllers();
 
 // ══════════════════════════════════════════════════════════════
 // Angular Dev Server (Development Only)
-// ══════════════════════════════════════════════════════════════
 if (builder.Environment.IsDevelopment())
 {
     var relativeAngularPath = @"Devken.CBC.SchoolManagment.UI\School-System-UI";
@@ -323,7 +317,6 @@ if (builder.Environment.IsDevelopment())
 
 // ══════════════════════════════════════════════════════════════
 // Startup Complete
-// ══════════════════════════════════════════════════════════════
 app.Logger.LogInformation("DevKen School Management API is starting...");
 app.Logger.LogInformation("Environment: {Environment}", app.Environment.EnvironmentName);
 app.Logger.LogInformation("Allowed CORS Origins: {Origins}", string.Join(", ", allowedOrigins));
