@@ -29,7 +29,7 @@ if (!Directory.Exists(uploadsPath))
 QuestPDF.Settings.License = LicenseType.Community;
 
 // ══════════════════════════════════════════════════════════════
-// CORS Configuration (Fixed)
+// CORS Configuration
 // ══════════════════════════════════════════════════════════════
 var angularCorsPolicy = "AngularCors";
 
@@ -59,6 +59,9 @@ builder.Services.AddCors(options =>
 // Controllers
 // ══════════════════════════════════════════════════════════════
 builder.Services.AddControllers();
+
+// ✅ Required for Swagger to discover endpoints and generate correct schemas
+builder.Services.AddEndpointsApiExplorer();
 
 // ══════════════════════════════════════════════════════════════
 // Database Configuration
@@ -98,6 +101,7 @@ builder.Services.AddSwaggerGen(c =>
         Description = "CBC School Management System API"
     });
 
+    // ✅ JWT Bearer security definition
     var securityScheme = new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -109,6 +113,7 @@ builder.Services.AddSwaggerGen(c =>
     };
 
     c.AddSecurityDefinition("Bearer", securityScheme);
+
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -124,6 +129,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 
+    // ✅ Include XML doc comments if the file exists
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath))
@@ -145,9 +151,6 @@ builder.Services.AddInfrastructure(builder.Configuration);
 // Google OAuth Authentication
 // ══════════════════════════════════════════════════════════════
 var googleSsoConfig = builder.Configuration.GetSection("Sso:Google");
-var googleClientId = googleSsoConfig["ClientId"];
-var googleClientSecret = googleSsoConfig["ClientSecret"];
-var googleRedirectUri = googleSsoConfig["RedirectUri"];
 
 builder.Services.AddAuthentication(options =>
 {
@@ -157,9 +160,9 @@ builder.Services.AddAuthentication(options =>
 .AddCookie("Cookies")
 .AddGoogle("Google", options =>
 {
-    options.ClientId = googleClientId;
-    options.ClientSecret = googleClientSecret;
-    options.CallbackPath = "/api/auth/sso/google"; // backend handles callback
+    options.ClientId = googleSsoConfig["ClientId"]!;
+    options.ClientSecret = googleSsoConfig["ClientSecret"]!;
+    options.CallbackPath = "/api/auth/sso/google";
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -260,7 +263,11 @@ using (var scope = app.Services.CreateScope())
 // ══════════════════════════════════════════════════════════════
 // Middleware Pipeline
 // ══════════════════════════════════════════════════════════════
+
+// ✅ 1. CORS must come first
 app.UseCors(angularCorsPolicy);
+
+// ✅ 2. Static files
 app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -268,6 +275,7 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads"
 });
 
+// ✅ 3. Localisation
 app.UseRequestLocalization(new RequestLocalizationOptions
 {
     DefaultRequestCulture = new RequestCulture("en-US"),
@@ -275,6 +283,9 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedUICultures = new List<CultureInfo> { new CultureInfo("en-US") }
 });
 
+// ✅ 4. Swagger — must be registered BEFORE auth middleware so the UI is always reachable
+//    In development:  served at "/" (root)
+//    In production:   served at "/swagger"
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -282,18 +293,23 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = app.Environment.IsDevelopment() ? string.Empty : "swagger";
     c.DocumentTitle = "DevKen School Management API";
     c.DisplayRequestDuration();
+    c.EnablePersistAuthorization(); // ✅ keeps the JWT token across page refreshes
 });
 
+// ✅ 5. Custom API pipeline (exception handling, logging, etc.)
 app.UseApiPipeline();
 
+// ✅ 6. Auth — always after Swagger so the UI itself is never blocked
 app.UseAuthentication();
 app.UseMiddleware<TenantMiddleware>();
 app.UseAuthorization();
 
+// ✅ 7. Controllers
 app.MapControllers();
 
 // ══════════════════════════════════════════════════════════════
 // Angular Dev Server (Development Only)
+// ══════════════════════════════════════════════════════════════
 if (builder.Environment.IsDevelopment())
 {
     var relativeAngularPath = @"Devken.CBC.SchoolManagment.UI\School-System-UI";
@@ -316,7 +332,8 @@ if (builder.Environment.IsDevelopment())
 }
 
 // ══════════════════════════════════════════════════════════════
-// Startup Complete
+// Startup Logging
+// ══════════════════════════════════════════════════════════════
 app.Logger.LogInformation("DevKen School Management API is starting...");
 app.Logger.LogInformation("Environment: {Environment}", app.Environment.EnvironmentName);
 app.Logger.LogInformation("Allowed CORS Origins: {Origins}", string.Join(", ", allowedOrigins));
