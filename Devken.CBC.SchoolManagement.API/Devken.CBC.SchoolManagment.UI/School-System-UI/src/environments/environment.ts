@@ -20,7 +20,8 @@ export const environment = {
             authUri: 'https://accounts.google.com/o/oauth2/auth',
             tokenUri: 'https://oauth2.googleapis.com/token',
             authProviderCertUrl: 'https://www.googleapis.com/oauth2/v1/certs',
-               redirectUris: isProduction
+   
+            redirectUris: isProduction
                 ? ['https://dev-ken-systems.vercel.app/example']
                 : ['http://localhost:4200/example'],
             javascriptOrigins: isProduction
